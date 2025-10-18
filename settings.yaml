@@ -1,0 +1,6 @@
+markets: ["ml", "spread", "total"]
+min_ev: 0.02
+kelly_fraction: 0.25
+max_stake_pct: 0.02
+lookback_weeks: 6
+train_seasons: [2022, 2023, 2024]
