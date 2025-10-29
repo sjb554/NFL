@@ -1,11 +1,23 @@
-﻿"""Edge calculations and simple recommendations.""" 
+"""Edge calculations and simple recommendations.""" 
 
 from __future__ import annotations
 
+import math
 from typing import Iterable, Mapping, Sequence
 
 MIN_PRICE = -10000
 MAX_PRICE = 10000
+
+
+
+def ev_from_american(p: float, american: int) -> float:
+    """Return expected value per $1 stake using American odds."""
+
+    if american > 0:
+        ret = american / 100.0
+    else:
+        ret = 100.0 / abs(american)
+    return p * ret - (1 - p)
 
 
 def fair_line_from_prob(prob: float) -> int:
@@ -60,16 +72,31 @@ def recommend_bets(
     recommendations: list[dict[str, object]] = []
 
     for row in odds_rows:
-        key = (row["game"], row["market"], row["side"])
+        key = (row["game_id"], row["market"], row["side"])
         model_p = model_probs.get(key)
-        if model_p is None:
+        if model_p is None or math.isnan(model_p):
             continue
 
         price = int(row["price"])
+        market = str(row.get("market", "")).lower()
         market_p = _american_to_prob(price)
-        ev = edge(model_p, market_p)
-        if ev <= min_edge:
+
+        if market == "spread":
+            blended = market_p + (model_p - market_p) * 0.3
+            model_p = max(min(blended, 0.95), 0.05)
+
+        edge_prob = model_p - market_p
+        max_edge = 0.25 if market != "spread" else 0.20
+        if abs(edge_prob) > max_edge:
             continue
+
+        ev = ev_from_american(model_p, price)
+        if market == "spread":
+            if ev < 0.005:
+                continue
+        else:
+            if ev < 0.01:
+                continue
 
         decimal_odds = _american_to_decimal(price)
         stake = kelly_stake(
@@ -86,6 +113,8 @@ def recommend_bets(
         recommendations.append(
             {
                 "game": row["game"],
+                "game_id": row.get("game_id", ""),
+                "kickoff": row.get("kickoff", ""),
                 "market": row["market"],
                 "side": row["side"],
                 "line": row.get("line"),
@@ -93,6 +122,7 @@ def recommend_bets(
                 "book": row.get("book", ""),
                 "model_prob": model_p,
                 "implied_prob": market_p,
+                "edge_prob": edge_prob,
                 "ev_pct": ev,
                 "stake": stake,
                 "fair_price": fair_line_from_prob(model_p),
@@ -124,4 +154,5 @@ __all__ = [
     "kelly_stake",
     "recommend_bets",
 ]
+
 

@@ -24,3 +24,9 @@ Thumbs.db
 data_cache/
 reports/*.csv
 
+reports/*.md
+reports/*.html
+site/data/*.csv
+site/data/generated.txt
+artifacts/
+reports/games_*.txt

@@ -1,6 +1,11 @@
-markets: ["ml", "spread", "total"]
+markets: ['ml', 'spread', 'total']
 min_ev: 0.02
 kelly_fraction: 0.25
 max_stake_pct: 0.02
-lookback_weeks: 6
+lookback_weeks: 8
 train_seasons: [2022, 2023, 2024]
+max_total_stake_pct: 0.05
+min_books_per_selection: 3
+stale_minutes_ok: 9999
+default_bankroll: 5000
+

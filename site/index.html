@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>MNF Lines Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #1f2933;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    body.dark {
+      background: #10141f;
+      color: #e4ecf7;
+    }
+    header {
+      padding: 2rem 1.5rem 1rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+    header p {
+      margin: 0.25rem 0 0;
+      color: inherit;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .controls input[type="search"] {
+      flex: 1 1 280px;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid rgba(31, 41, 51, 0.2);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: inherit;
+      color: inherit;
+    }
+    .controls button {
+      padding: 0.6rem 0.9rem;
+      border: none;
+      border-radius: 8px;
+      background: #0b3d91;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    body.dark .controls button {
+      background: #3d8bfd;
+      color: #04070f;
+    }
+    .controls button:hover {
+      opacity: 0.85;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
+    }
+    section {
+      margin-top: 2rem;
+      background: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+    body.dark section {
+      background: rgba(12, 16, 27, 0.95);
+      box-shadow: 0 12px 32px rgba(5, 10, 25, 0.55);
+    }
+    section header {
+      padding: 1.25rem;
+      margin: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: rgba(11, 61, 145, 0.08);
+    }
+    body.dark thead {
+      background: rgba(61, 139, 253, 0.12);
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 41, 51, 0.12);
+    }
+    body.dark th, body.dark td {
+      border-bottom: 1px solid rgba(228, 236, 247, 0.12);
+    }
+    th {
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+    }
+    tr:hover td {
+      background: rgba(11, 61, 145, 0.06);
+    }
+    body.dark tr:hover td {
+      background: rgba(61, 139, 253, 0.08);
+    }
+    caption {
+      text-align: left;
+      padding: 1rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.45rem;
+      border-radius: 6px;
+      background: rgba(11,61,145,0.12);
+      color: inherit;
+      font-size: 0.75rem;
+    }
+    .ev-pos {
+      color: #0f9d58;
+      font-weight: 600;
+    }
+    .ev-neg {
+      color: #d93025;
+      font-weight: 600;
+    }
+    .empty {
+      padding: 1rem 1.5rem 1.5rem;
+      font-style: italic;
+      color: rgba(31, 41, 51, 0.7);
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem 3rem;
+      color: rgba(31, 41, 51, 0.7);
+    }
+    body.dark footer {
+      color: rgba(228, 236, 247, 0.6);
+    }
+    a {
+      color: #0b3d91;
+    }
+    body.dark a {
+      color: #8ab4f8;
+    }
+    @media (max-width: 720px) {
+      th, td {
+        padding: 0.65rem 0.75rem;
+      }
+      caption {
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MNF Odds Dashboard</h1>
+    <p>Sortable, filterable view of the latest best-line snapshot and model recommendations.</p>
+    <div class="controls">
+      <input id="filter" type="search" placeholder="Filter by team, market, book?" aria-label="Filter rows" />
+      <button id="toggle-theme" type="button">Toggle dark theme</button>
+      <a id="download-lines" class="badge" href="data/lines.csv" download>Best Lines CSV</a>
+      <a id="download-recs" class="badge" href="data/recommend.csv" download>Recommendations CSV</a>
+    </div>
+    <p id="meta" style="margin-top:0.75rem;font-size:0.9rem;"></p>
+  </header>
+
+  <main>
+    <section>
+      <header><h2>Best Lines</h2></header>
+      <div id="best-lines-container"></div>
+    </section>
+
+    <section>
+      <header><h2>Recommendations</h2></header>
+      <div id="recommendations-container"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small id="footer-text">Data updates when the CLI publishes reports.</small>
+  </footer>
+
+  <script>
+    const state = {
+      lines: { data: [], filtered: [], sort: { key: null, dir: 'asc' } },
+      recs: { data: [], filtered: [], sort: { key: null, dir: 'asc' } },
+      filterText: ''
+    };
+
+    const bestLinesContainer = document.getElementById('best-lines-container');
+    const recsContainer = document.getElementById('recommendations-container');
+    const filterInput = document.getElementById('filter');
+    const themeButton = document.getElementById('toggle-theme');
+    const footerText = document.getElementById('footer-text');
+    const meta = document.getElementById('meta');
+
+    const bestLineGroups = [
+      {
+        label: 'Game',
+        columns: [{ key: 'Game', label: 'Game', rowspan: 2 }],
+      },
+      {
+        label: 'ML',
+        columns: [
+          { key: 'ML Side', label: 'Side' },
+          { key: 'ML Line', label: 'Line' },
+          { key: 'ML Price', label: 'Price' },
+          { key: 'ML Book', label: 'Book' },
+        ],
+      },
+      {
+        label: 'Spread',
+        columns: [
+          { key: 'Spread Side', label: 'Side' },
+          { key: 'Spread Line', label: 'Line' },
+          { key: 'Spread Price', label: 'Price' },
+          { key: 'Spread Book', label: 'Book' },
+        ],
+      },
+      {
+        label: 'Total',
+        columns: [
+          { key: 'Total Side', label: 'Side' },
+          { key: 'Total Line', label: 'Line' },
+          { key: 'Total Price', label: 'Price' },
+          { key: 'Total Book', label: 'Book' },
+        ],
+      },
+    ];
+
+    const fetchText = async (url) => {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(res.statusText);
+        return await res.text();
+      } catch (err) {
+        console.warn('Unable to fetch', url, err);
+        return null;
+      }
+    };
+
+    const parseCsv = (text) => {
+      if (!text) return [];
+      const rows = text.trim().split(/\r?\n/).map((r) => r.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(cell => cell.replace(/^\"|\"$/g, '').trim()));
+      if (!rows.length) return [];
+      const headers = rows.shift();
+      return rows.map((row) => Object.fromEntries(headers.map((h, i) => [h, row[i] ?? ''])));
+    };
+
+    const normalizeHeader = (value = '') => value.toLowerCase().replace(/[_\s]+/g, ' ').trim();
+
+    const shouldOmitColumn = (value = '') => normalizeHeader(value) === 'last update';
+
+    const stripColumns = (records, columns = []) => {
+      const targets = new Set(columns.map((column) => normalizeHeader(column)));
+      return records.map((record) => {
+        const next = { ...record };
+        Object.keys(record).forEach((key) => {
+          if (targets.has(normalizeHeader(key))) {
+            delete next[key];
+          }
+        });
+        return next;
+      });
+    };
+
+    const buildTable = (id, records, container, type) => {
+      if (!records.length) {
+        container.innerHTML = '<p class="empty">No data available. Publish a report to refresh the dashboard.</p>';
+        return;
+      }
+      let headers = [];
+      const table = document.createElement('table');
+      table.dataset.type = type;
+      const thead = document.createElement('thead');
+
+      if (type === 'lines') {
+        const topRow = document.createElement('tr');
+        const subRow = document.createElement('tr');
+        let hasSubHeaders = false;
+
+        bestLineGroups.forEach((group) => {
+          if (group.columns.length === 1 && group.columns[0].rowspan === 2) {
+            const column = group.columns[0];
+            const th = document.createElement('th');
+            th.textContent = column.label;
+            th.rowSpan = 2;
+            th.dataset.key = column.key;
+            th.addEventListener('click', () => handleSort(type, column.key));
+            topRow.appendChild(th);
+            headers.push(column.key);
+          } else {
+            const thGroup = document.createElement('th');
+            thGroup.textContent = group.label;
+            thGroup.colSpan = group.columns.length;
+            topRow.appendChild(thGroup);
+            group.columns.forEach((column) => {
+              const th = document.createElement('th');
+              th.textContent = column.label;
+              th.dataset.key = column.key;
+              th.addEventListener('click', () => handleSort(type, column.key));
+              subRow.appendChild(th);
+              headers.push(column.key);
+            });
+            hasSubHeaders = true;
+          }
+        });
+
+        thead.appendChild(topRow);
+        if (hasSubHeaders) {
+          thead.appendChild(subRow);
+        }
+      } else {
+        headers = Object.keys(records[0]).filter((key) => !shouldOmitColumn(key));
+        const headerRow = document.createElement('tr');
+        headers.forEach((header) => {
+          const th = document.createElement('th');
+          th.textContent = header;
+          th.dataset.key = header;
+          th.addEventListener('click', () => handleSort(type, header));
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+      }
+
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      records.forEach((record) => {
+        const tr = document.createElement('tr');
+        headers.forEach((header) => {
+          const td = document.createElement('td');
+          const value = record[header] ?? '';
+          if (type === 'recs' && header.toLowerCase().includes('ev')) {
+            const numeric = parseFloat(String(value).replace(/[^\d.-]/g, ''));
+            if (!Number.isNaN(numeric)) {
+              td.classList.add(numeric >= 0 ? 'ev-pos' : 'ev-neg');
+            }
+          }
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      container.innerHTML = '';
+      container.appendChild(table);
+    };
+
+
+    const applyFilter = () => {
+      const term = state.filterText.toLowerCase();
+      ['lines', 'recs'].forEach((key) => {
+        const source = state[key].data;
+        state[key].filtered = term
+          ? source.filter((row) => Object.values(row).some((value) => String(value).toLowerCase().includes(term)))
+          : [...source];
+      });
+      render();
+    };
+
+    const handleSort = (type, key) => {
+      const tableState = state[type];
+      if (tableState.sort.key === key) {
+        tableState.sort.dir = tableState.sort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        tableState.sort.key = key;
+        tableState.sort.dir = 'asc';
+      }
+      tableState.filtered.sort((a, b) => {
+        const va = a[key] ?? '';
+        const vb = b[key] ?? '';
+        const numA = parseFloat(String(va).replace(/[^\d.-]/g, ''));
+        const numB = parseFloat(String(vb).replace(/[^\d.-]/g, ''));
+        const bothNumeric = !Number.isNaN(numA) && !Number.isNaN(numB);
+        let result;
+        if (bothNumeric) {
+          result = numA - numB;
+        } else {
+          result = String(va).localeCompare(String(vb));
+        }
+        return tableState.sort.dir === 'asc' ? result : -result;
+      });
+      render();
+    };
+
+    const render = () => {
+      buildTable('best-lines', state.lines.filtered, bestLinesContainer, 'lines');
+      buildTable('recommendations', state.recs.filtered, recsContainer, 'recs');
+    };
+
+    const init = async () => {
+      const [linesText, recsText, metaText] = await Promise.all([
+        fetchText('data/lines.csv'),
+        fetchText('data/recommend.csv'),
+        fetchText('data/generated.txt'),
+      ]);
+
+      state.lines.data = stripColumns(parseCsv(linesText), ['Last Update']);
+      state.recs.data = stripColumns(parseCsv(recsText), ['Last Update']);
+      state.lines.filtered = [...state.lines.data];
+      state.recs.filtered = [...state.recs.data];
+
+      if (metaText) {
+        meta.textContent = metaText.trim();
+        footerText.textContent = metaText.trim();
+      } else {
+        meta.textContent = 'CSV snapshots are copied when the CLI publishes reports.';
+      }
+
+      if (!state.lines.data.length) {
+        document.getElementById('download-lines').style.display = 'none';
+      }
+      if (!state.recs.data.length) {
+        document.getElementById('download-recs').style.display = 'none';
+      }
+
+      render();
+    };
+
+    filterInput.addEventListener('input', (event) => {
+      state.filterText = event.target.value;
+      applyFilter();
+    });
+
+    themeButton.addEventListener('click', () => {
+      const body = document.body;
+      const newTheme = body.classList.toggle('dark') ? 'dark' : 'light';
+      document.documentElement.dataset.theme = newTheme;
+      localStorage.setItem('mnf-theme', newTheme);
+    });
+
+    const savedTheme = localStorage.getItem('mnf-theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+      document.documentElement.dataset.theme = 'dark';
+    }
+
+    init();
+  </script>
+</body>
+</html>
+
+
